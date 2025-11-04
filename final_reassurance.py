@@ -1007,11 +1007,14 @@ elif section == "🏛️ Acteurs & Flux Ludiques":
 
 # Configuration de la page
 st.set_page_config(
-    page_title="Plateforme  de Réassurance - Théorie & Data Science",
-    page_icon="🏛️",
-    layout="wide",
+    page_title="Plateforme de Réassurance - Théorie & Data Science",
+    page_icon="🧊",
+    layout="wide", 
     initial_sidebar_state="expanded"
 )
+
+# Now you can add other Streamlit components
+st.title("Votre application de réassurance")
 
 # CSS personnalisé amélioré
 st.markdown("""
