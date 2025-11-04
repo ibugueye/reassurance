@@ -2656,6 +2656,459 @@ class PageManager:
                 st.metric("🎯 Nouveau ratio combiné", f"{nouveau_ratio_combine:.1f}%")
                 st.metric("📈 Amélioration rentabilité", f"{benefice_supplementaire:,.0f} €")
 
+
+    # =============================================================================
+# SECTION 10: ANALYSE DATA SCIENCE
+# =============================================================================
+elif section == "📊 Analyse Data Science":
+    st.markdown('<div class="section-header">📊 Analyse Data Science - KPI & Prévisions</div>', unsafe_allow_html=True)
+    
+    # Sidebar pour les données
+    with st.sidebar:
+        st.subheader("📥 Chargement des Données")
+        uploaded_file = st.file_uploader("Importer CSV/Excel", type=["csv", "xlsx", "xls"])
+        
+        st.subheader("⚙️ Configuration")
+        use_demo_data = st.checkbox("Utiliser les données de démonstration", value=True)
+        freq = st.selectbox("Fréquence des données", ["Trimestrielle", "Mensuelle", "Annuelle"], index=0)
+        forecast_years = st.slider("Années de prévision", 1, 5, 3)
+    
+    # Préparation des données
+    if use_demo_data:
+        df_raw = make_demo_data(periods=16, freq="Q" if freq == "Trimestrielle" else "M")
+        mapping = auto_map_columns(df_raw)
+    elif uploaded_file is not None:
+        if uploaded_file.name.endswith('.csv'):
+            df_raw = pd.read_csv(uploaded_file)
+        else:
+            df_raw = pd.read_excel(uploaded_file)
+        mapping = auto_map_columns(df_raw)
+        
+        # Interface de mapping manuel
+        st.sidebar.subheader("🎯 Mapping des Colonnes")
+        for key in REQUIRED_BASE:
+            available_cols = [None] + list(df_raw.columns)
+            default_idx = 0
+            if mapping.get(key) in df_raw.columns:
+                default_idx = list(df_raw.columns).index(mapping[key]) + 1
+            mapping[key] = st.sidebar.selectbox(
+                f"Colonne pour {key}", 
+                available_cols,
+                index=default_idx
+            )
+    else:
+        st.info("📊 Veuillez importer un fichier ou utiliser les données de démonstration")
+        st.stop()
+    
+    # Application du mapping
+    if mapping:
+        rename_dict = {v: k for k, v in mapping.items() if v is not None}
+        df = df_raw.rename(columns=rename_dict)
+        df["date"] = _infer_date_col(df["date"])
+        df = add_month_start(df)
+        df_kpi = compute_kpis(df)
+    
+    # Métriques principales
+    agg_global = aggregate_kpis(df_kpi, by=["date"]).sort_values("date")
+    if not agg_global.empty:
+        last_row = agg_global.iloc[-1]
+        
+        col1, col2, col3, col4, col5 = st.columns(5)
+        col1.metric("Primes Acquises", f"{last_row['earned_premium']:,.0f} €")
+        col2.metric("Sinistres Encourus", f"{last_row['incurred_claims']:,.0f} €")
+        col3.metric("Loss Ratio", f"{last_row['loss_ratio']*100:.1f}%")
+        col4.metric("Combined Ratio", f"{last_row['combined_ratio']*100:.1f}%")
+        if 'solvency_ratio' in last_row:
+            col5.metric("Solvabilité", f"{last_row['solvency_ratio']*100:.1f}%")
+    
+    # Onglets d'analyse
+    tab1, tab2, tab3, tab4, tab5 = st.tabs(["📈 KPI Dynamiques", "🔮 Prévisions", "🧪 Stress Tests", "🗂️ Structure Portefeuille", "📤 Export"])
+    
+    with tab1:
+        st.subheader("📈 Analyse des KPI par Dimension")
+        
+        dimensions = []
+        if "lob" in df_kpi.columns:
+            dimensions.append("lob")
+        if "region" in df_kpi.columns:
+            dimensions.append("region")
+        if "cedant" in df_kpi.columns:
+            dimensions.append("cedant")
+            
+        selected_dims = st.multiselect("Regrouper par", dimensions, default=dimensions[:1] if dimensions else [])
+        
+        if selected_dims:
+            grouped_data = aggregate_kpis(df_kpi, by=["date"] + selected_dims)
+            
+            # Sélecteur de KPI
+            kpi_options = {
+                "Loss Ratio": "loss_ratio",
+                "Expense Ratio": "expense_ratio", 
+                "Combined Ratio": "combined_ratio",
+                "Operating Ratio": "operating_ratio",
+                "Cession Ratio": "cession_ratio"
+            }
+            selected_kpi = st.selectbox("KPI à analyser", list(kpi_options.keys()))
+            kpi_column = kpi_options[selected_kpi]
+            
+            fig = px.line(grouped_data, x="date", y=kpi_column, color=selected_dims[0], 
+                         title=f"Évolution du {selected_kpi} par {selected_dims[0]}",
+                         markers=True)
+            st.plotly_chart(fig, width='stretch')
+            
+            # Heatmap des corrélations
+            st.subheader("📊 Matrice de Corrélation")
+            numeric_cols = grouped_data.select_dtypes(include=[np.number]).columns
+            corr_matrix = grouped_data[numeric_cols].corr()
+            fig_corr = px.imshow(corr_matrix, text_auto=True, aspect="auto",
+                               title="Corrélations entre Variables Numériques")
+            st.plotly_chart(fig_corr, width='stretch')
+    
+    with tab2:
+        st.subheader("🔮 Prévisions SARIMAX")
+        
+        target_var = st.selectbox("Variable à prévoir", 
+                                 ["earned_premium", "incurred_claims", "combined_ratio", "loss_ratio"])
+        
+        forecast_dim = st.selectbox("Dimension de prévision", 
+                                   ["Global"] + [d for d in ["lob", "region"] if d in df_kpi.columns])
+        
+        def generate_forecast(data_subset, target, steps):
+            """Génère les prévisions pour un sous-ensemble de données"""
+            aggregated = aggregate_kpis(data_subset, by=["date"]).sort_values("date")
+            if aggregated.empty:
+                return pd.DataFrame()
+                
+            ts_data = aggregated.set_index("date")[target]
+            
+            # Déterminer le nombre de pas selon la fréquence
+            if freq == "Trimestrielle":
+                steps_calc = 4 * steps
+            elif freq == "Mensuelle":
+                steps_calc = 12 * steps
+            else:  # Annuelle
+                steps_calc = steps
+                
+            forecast = sarimax_forecast(ts_data, steps_calc)
+            
+            # Préparation des résultats
+            historical = pd.DataFrame({
+                'date': ts_data.index,
+                'value': ts_data.values,
+                'type': 'Historique'
+            })
+            
+            future = pd.DataFrame({
+                'date': forecast.index,
+                'value': forecast.values,
+                'type': 'Prévision'
+            })
+            
+            return pd.concat([historical, future], ignore_index=True)
+        
+        if forecast_dim == "Global":
+            forecast_data = generate_forecast(df_kpi, target_var, forecast_years)
+            if not forecast_data.empty:
+                fig_forecast = px.line(forecast_data, x='date', y='value', color='type',
+                                     title=f"Prévision {target_var} - Global")
+                st.plotly_chart(fig_forecast, width='stretch')
+        else:
+            unique_vals = df_kpi[forecast_dim].dropna().unique()
+            for val in unique_vals:
+                subset = df_kpi[df_kpi[forecast_dim] == val]
+                forecast_data = generate_forecast(subset, target_var, forecast_years)
+                if not forecast_data.empty:
+                    fig_forecast = px.line(forecast_data, x='date', y='value', color='type',
+                                         title=f"Prévision {target_var} - {forecast_dim}: {val}")
+                    st.plotly_chart(fig_forecast, width='stretch')
+    
+    with tab3:
+        st.subheader("🧪 Tests de Résistance (Stress Tests)")
+        
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            freq_shock = st.slider("Choc Fréquence (%)", -50, 200, 20)
+        with col2:
+            sev_shock = st.slider("Choc Sévérité (%)", -50, 300, 30)
+        with col3:
+            cat_event = st.slider("Événement CAT (multiplicateur)", 1.0, 10.0, 3.0)
+        
+        # Application des chocs
+        df_stress = df_kpi.copy()
+        
+        if "claims_count" in df_stress.columns:
+            df_stress["claims_count"] = df_stress["claims_count"] * (1 + freq_shock/100)
+            
+        df_stress["incurred_claims"] = df_stress["incurred_claims"] * (1 + sev_shock/100)
+        
+        # Application d'un événement CAT sur la dernière période
+        last_date = df_stress["date"].max()
+        cat_mask = df_stress["date"] == last_date
+        df_stress.loc[cat_mask, "incurred_claims"] = df_stress.loc[cat_mask, "incurred_claims"] * cat_event
+        
+        # Comparaison baseline vs stress
+        base_kpi = aggregate_kpis(df_kpi, by=["date"])
+        stress_kpi = aggregate_kpis(df_stress, by=["date"])
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            fig_base = px.line(base_kpi, x="date", y="combined_ratio", 
+                             title="Combined Ratio - Baseline")
+            st.plotly_chart(fig_base, width='stretch')
+        with col2:
+            fig_stress = px.line(stress_kpi, x="date", y="combined_ratio",
+                               title="Combined Ratio - Stress Test")
+            st.plotly_chart(fig_stress, width='stretch')
+        
+        # Impact sur la solvabilité
+        if {"scr", "own_funds"}.issubset(df_kpi.columns):
+            base_solv = base_kpi["own_funds"].sum() / base_kpi["scr"].sum()
+            stress_solv = stress_kpi["own_funds"].sum() / stress_kpi["scr"].sum()
+            
+            st.metric("Ratio de Solvabilité Baseline", f"{base_solv:.2%}")
+            st.metric("Ratio de Solvabilité Stress", f"{stress_solv:.2%}", 
+                     delta=f"{(stress_solv - base_solv):.2%}")
+    
+    with tab4:
+        st.subheader("🗂️ Structure du Portefeuille")
+        
+        # Répartition par LOB
+        if "lob" in df_kpi.columns:
+            lob_analysis = aggregate_kpis(df_kpi, by=["lob"])
+            fig_lob = px.pie(lob_analysis, values="earned_premium", names="lob",
+                           title="Répartition des Primes par Ligne de Business")
+            st.plotly_chart(fig_lob, width='stretch')
+        
+        # Répartition géographique
+        if "region" in df_kpi.columns:
+            region_analysis = aggregate_kpis(df_kpi, by=["region"])
+            fig_region = px.bar(region_analysis, x="region", y="earned_premium",
+                              title="Primes par Région")
+            st.plotly_chart(fig_region, width='stretch')
+        
+        # Analyse fréquence vs sévérité
+        if {"frequency", "severity"}.issubset(df_kpi.columns):
+            freq_sev_analysis = aggregate_kpis(df_kpi, by=["lob"] if "lob" in df_kpi.columns else ["region"])
+            fig_scatter = px.scatter(freq_sev_analysis, x="frequency", y="severity",
+                                   size="earned_premium", hover_name=freq_sev_analysis.index,
+                                   title="Fréquence vs Sévérité par Segment")
+            st.plotly_chart(fig_scatter, width='stretch')
+    
+    with tab5:
+        st.subheader("📤 Export des Données et Rapports")
+        
+        # Export CSV
+        st.markdown("### 📊 Données Brutes avec KPI")
+        st.dataframe(df_kpi.head(100))
+        download_button(df_kpi, "donnees_reassurance_avec_kpi.csv")
+        
+        # Export agrégé
+        st.markdown("### 📈 Données Agrégées")
+        aggregated_data = aggregate_kpis(df_kpi, by=["date"])
+        st.dataframe(aggregated_data)
+        download_button(aggregated_data, "kpi_agreges.csv")
+        
+        # Rapport PDF (simplifié)
+        st.markdown("### 📄 Rapport PDF")
+        if st.button("Générer le Rapport d'Analyse"):
+            # Simulation de génération de rapport
+            st.success("📋 Rapport généré avec succès!")
+            st.info("""
+            **Contenu du rapport:**
+            - Synthèse des KPI principaux
+            - Analyse des tendances
+            - Prévisions sur 3 ans
+            - Tests de résistance
+            - Recommandations stratégiques
+            """)
+
+# =============================================================================
+# SECTION 11: CALCULATEURS AVANCÉS
+# =============================================================================
+elif section == "🧮 Calculateurs Avancés":
+    st.markdown('<div class="section-header">🧮 Calculateurs Avancés - Outils Professionnels</div>', unsafe_allow_html=True)
+    
+    tab1, tab2, tab3 = st.tabs(["📈 Optimisation Programme", "💰 Analyse de Rentabilité", "🛡️ Simulation SCR"])
+    
+    with tab1:
+        st.subheader("📈 Optimisateur de Programme de Réassurance")
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.markdown("""
+            <div class="concept-box">
+            <h4>🎯 Objectif d'Optimisation</h4>
+            <p>Cet outil permet de trouver la structure optimale de réassurance qui maximise 
+            la rentabilité tout en respectant les contraintes de solvabilité.</p>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            # Paramètres du portefeuille
+            st.subheader("📊 Paramètres du Portefeuille")
+            
+            primes_portefeuille = st.number_input("Primes du portefeuille (€)", value=10000000)
+            sinistres_attendus = st.number_input("Sinistres attendus (€)", value=7000000)
+            volatilite_sinistres = st.slider("Volatilité des sinistres (%)", 10, 50, 25)
+            capital_disponible = st.number_input("Capital disponible (€)", value=3000000)
+            cout_capital = st.slider("Coût du capital (%)", 8, 15, 10)
+        
+        with col2:
+            st.markdown("""
+            <div class="theory-box">
+            <h4>⚙️ Contraintes d'Optimisation</h4>
+            <ul>
+            <li>Ratio de solvabilité ≥ 100%</li>
+            <li>Probabilité de ruine ≤ 0.5%</li>
+            <li>Coût réassurance ≤ 15% des primes</li>
+            <li>Rétention ≥ 500k€</li>
+            </ul>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            # Lancement de l'optimisation
+            if st.button("🚀 Lancer l'optimisation"):
+                # Simulation d'optimisation
+                st.subheader("📊 Résultats de l'Optimisation")
+                
+                resultats_opti = {
+                    'Paramètre': ['Quote-Share optimal', 'Rétention optimale', 'Stop Loss priorité', 'Coût réassurance', 'SCR après réassurance', 'Gain en capital'],
+                    'Valeur': ['25%', '750k€', '115% des primes', '12.5% des primes', '2.1M€', '450k€'],
+                    'Impact': ['↘️ Coût -15%', '↗️ Protection +10%', '🛡️ Sécurité +20%', '💰 Économie 250k€', '📈 Solvabilité +25%', '📊 ROE +2.5%']
+                }
+                
+                st.dataframe(pd.DataFrame(resultats_opti), width='stretch')
+                
+                # Graphique des gains
+                gains_data = {
+                    'Élément': ['Économie coût réassurance', 'Gain en capital libéré', 'Amélioration rentabilité', 'Réduction volatilité'],
+                    'Montant (k€)': [250, 450, 180, 320]
+                }
+                
+                fig_gains = px.bar(gains_data, x='Élément', y='Montant (k€)',
+                                 title="Gains de l'Optimisation")
+                st.plotly_chart(fig_gains, width='stretch')
+    
+    with tab2:
+        st.subheader("💰 Analyse de Rentabilité par Ligne de Business")
+        
+        # Calculateur ROE par ligne
+        lignes_business = st.multiselect("Lignes de business à analyser", 
+                                       ['Auto', 'Habitation', 'Santé', 'RC Pro', 'Vie'],
+                                       default=['Auto', 'Habitation'])
+        
+        if lignes_business:
+            data_roe = []
+            for ligne in lignes_business:
+                col1, col2, col3 = st.columns(3)
+                
+                with col1:
+                    primes = st.number_input(f"Primes {ligne} (€)", value=2000000, key=f"primes_{ligne}")
+                with col2:
+                    sinistres = st.number_input(f"Sinistres {ligne} (€)", value=1400000, key=f"sinistres_{ligne}")
+                with col3:
+                    capital_alloue = st.number_input(f"Capital alloué {ligne} (€)", value=800000, key=f"capital_{ligne}")
+                
+                resultat_technique = primes - sinistres
+                roe = (resultat_technique / capital_alloue) * 100 if capital_alloue > 0 else 0
+                
+                data_roe.append({
+                    'Ligne': ligne,
+                    'Primes': primes,
+                    'Sinistres': sinistres,
+                    'Résultat Technique': resultat_technique,
+                    'Capital Alloué': capital_alloue,
+                    'ROE Technique': roe
+                })
+            
+            df_roe = pd.DataFrame(data_roe)
+            st.dataframe(df_roe, width='stretch')
+            
+            # Graphique ROE
+            fig_roe = px.bar(df_roe, x='Ligne', y='ROE Technique', 
+                           title="Rentabilité par Ligne de Business")
+            st.plotly_chart(fig_roe, width='stretch')
+            
+            # Analyse de la performance
+            roe_moyen = df_roe['ROE Technique'].mean()
+            meilleure_ligne = df_roe.loc[df_roe['ROE Technique'].idxmax()]
+            moins_rentable = df_roe.loc[df_roe['ROE Technique'].idxmin()]
+            
+            col_perf1, col_perf2, col_perf3 = st.columns(3)
+            with col_perf1:
+                st.metric("📈 ROE Moyen", f"{roe_moyen:.1f}%")
+            with col_perf2:
+                st.metric("🏆 Meilleure ligne", f"{meilleure_ligne['Ligne']} ({meilleure_ligne['ROE Technique']:.1f}%)")
+            with col_perf3:
+                st.metric("📉 Ligne à améliorer", f"{moins_rentable['Ligne']} ({moins_rentable['ROE Technique']:.1f}%)")
+
+# =============================================================================
+# FOOTER
+# =============================================================================
+st.markdown("---")
+
+col_f1, col_f2, col_f3 = st.columns(3)
+
+with col_f1:
+    st.markdown("**📚 Références Techniques**")
+    st.markdown("""
+    - Code des Assurances
+    - Directive Solvabilité II
+    - Normes IFRS 17
+    - Principes Actuariels
+    - Standards de réassurance
+    """)
+
+with col_f2:
+    st.markdown("**🔍 Glossaire Technique**")
+    st.markdown("""
+    - Cédante / Réassureur
+    - Traités / Facultatif
+    - Prime / Commission
+    - Rétention / Cession
+    - SCR / MCR
+    """)
+
+with col_f3:
+    st.markdown("**📞 Support Pédagogique**")
+    st.markdown("""
+    Xataxeli MBA - Programme Réassurance  
+    📧 ibugueye@ngorweb.com  
+    🌐 www.ngorweb.com
+    """)
+
+st.markdown("---")
+st.markdown(
+    "**Plateforme pédagogique Xataxeli MBA - Réassurance & Data Science** | "
+    "© 2024 - Tous droits réservés | "
+    "**Version Professionnelle 4.0**"
+)
+
+# =============================================================================
+# FONCTIONNALITÉS AVANCÉES SIDEBAR
+# =============================================================================
+st.sidebar.markdown("---")
+st.sidebar.subheader("🛠️ Outils Professionnels")
+
+if st.sidebar.button("📥 Exporter l'Analyse Complète"):
+    st.sidebar.success("Fonctionnalité d'export activée")
+
+if st.sidebar.button("🔄 Réinitialiser les Données"):
+    st.experimental_rerun()
+
+st.sidebar.markdown("---")
+st.sidebar.markdown("**🔐 Session Utilisateur**")
+st.sidebar.info("Connecté en tant que : Étudiant BIGDAA MBA")
+
+# Mode démo avancé
+demo_mode = st.sidebar.checkbox("Mode Démonstration Avancé")
+if demo_mode:
+    st.sidebar.info("""
+    **Fonctionnalités démo activées:**
+    - Données de test complètes
+    - Simulations avancées
+    - Scénarios pré-configurés
+    """)
     def _page_analyse_data_science(self):
         """Page d'analyse data science"""
         st.markdown('<div class="section-header">📊 Analyse Data Science - KPI & Prévisions</div>', unsafe_allow_html=True)
@@ -2742,4 +3195,5 @@ class ReassuranceApp:
 if __name__ == "__main__":
     app = ReassuranceApp()
     app.run()
+
 
