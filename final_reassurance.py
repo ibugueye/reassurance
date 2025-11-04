@@ -2656,31 +2656,34 @@ class PageManager:
                 st.metric("🎯 Nouveau ratio combiné", f"{nouveau_ratio_combine:.1f}%")
                 st.metric("📈 Amélioration rentabilité", f"{benefice_supplementaire:,.0f} €")
 
-
-    # =============================================================================
-# SECTION 10: ANALYSE DATA SCIENCE
+# =============================================================================
+# SECTION 10: ANALYSE DATA SCIENCE - CORRIGÉE
 # =============================================================================
 
+def _page_analyse_data_science(self):
+    """Page d'analyse data science"""
+    st.markdown('<div class="section-header">📊 Analyse Data Science - KPI & Prévisions</div>', unsafe_allow_html=True)
+    
     # Sidebar pour les données
     with st.sidebar:
         st.subheader("📥 Chargement des Données")
         uploaded_file = st.file_uploader("Importer CSV/Excel", type=["csv", "xlsx", "xls"])
-        
+    
         st.subheader("⚙️ Configuration")
         use_demo_data = st.checkbox("Utiliser les données de démonstration", value=True)
         freq = st.selectbox("Fréquence des données", ["Trimestrielle", "Mensuelle", "Annuelle"], index=0)
         forecast_years = st.slider("Années de prévision", 1, 5, 3)
-    
+
     # Préparation des données
     if use_demo_data:
-        df_raw = make_demo_data(periods=16, freq="Q" if freq == "Trimestrielle" else "M")
-        mapping = auto_map_columns(df_raw)
+        df_raw = self.generator.make_demo_data(periods=16, freq="Q" if freq == "Trimestrielle" else "M")  # CORRECTION: self.generator.
+        mapping = self.processor.auto_map_columns(df_raw)  # CORRECTION: self.processor.
     elif uploaded_file is not None:
         if uploaded_file.name.endswith('.csv'):
             df_raw = pd.read_csv(uploaded_file)
         else:
             df_raw = pd.read_excel(uploaded_file)
-        mapping = auto_map_columns(df_raw)
+        mapping = self.processor.auto_map_columns(df_raw)  # CORRECTION: self.processor.
         
         # Interface de mapping manuel
         st.sidebar.subheader("🎯 Mapping des Colonnes")
@@ -2702,12 +2705,12 @@ class PageManager:
     if mapping:
         rename_dict = {v: k for k, v in mapping.items() if v is not None}
         df = df_raw.rename(columns=rename_dict)
-        df["date"] = _infer_date_col(df["date"])
-        df = add_month_start(df)
-        df_kpi = compute_kpis(df)
+        df["date"] = self.processor._infer_date_col(df["date"])  # CORRECTION: self.processor.
+        df = self.processor.add_month_start(df)  # CORRECTION: self.processor.
+        df_kpi = self.processor.compute_kpis(df)  # CORRECTION: self.processor.
     
     # Métriques principales
-    agg_global = aggregate_kpis(df_kpi, by=["date"]).sort_values("date")
+    agg_global = self.processor.aggregate_kpis(df_kpi, by=["date"]).sort_values("date")  # CORRECTION: self.processor.
     if not agg_global.empty:
         last_row = agg_global.iloc[-1]
         
@@ -2736,7 +2739,7 @@ class PageManager:
         selected_dims = st.multiselect("Regrouper par", dimensions, default=dimensions[:1] if dimensions else [])
         
         if selected_dims:
-            grouped_data = aggregate_kpis(df_kpi, by=["date"] + selected_dims)
+            grouped_data = self.processor.aggregate_kpis(df_kpi, by=["date"] + selected_dims)  # CORRECTION: self.processor.
             
             # Sélecteur de KPI
             kpi_options = {
@@ -2752,7 +2755,7 @@ class PageManager:
             fig = px.line(grouped_data, x="date", y=kpi_column, color=selected_dims[0], 
                          title=f"Évolution du {selected_kpi} par {selected_dims[0]}",
                          markers=True)
-            st.plotly_chart(fig, width='stretch')
+            st.plotly_chart(fig, use_container_width=True)  # CORRECTION: use_container_width=True
             
             # Heatmap des corrélations
             st.subheader("📊 Matrice de Corrélation")
@@ -2760,7 +2763,7 @@ class PageManager:
             corr_matrix = grouped_data[numeric_cols].corr()
             fig_corr = px.imshow(corr_matrix, text_auto=True, aspect="auto",
                                title="Corrélations entre Variables Numériques")
-            st.plotly_chart(fig_corr, width='stretch')
+            st.plotly_chart(fig_corr, use_container_width=True)  # CORRECTION: use_container_width=True
     
     with tab2:
         st.subheader("🔮 Prévisions SARIMAX")
@@ -2773,7 +2776,7 @@ class PageManager:
         
         def generate_forecast(data_subset, target, steps):
             """Génère les prévisions pour un sous-ensemble de données"""
-            aggregated = aggregate_kpis(data_subset, by=["date"]).sort_values("date")
+            aggregated = self.processor.aggregate_kpis(data_subset, by=["date"]).sort_values("date")  # CORRECTION: self.processor.
             if aggregated.empty:
                 return pd.DataFrame()
                 
@@ -2787,7 +2790,7 @@ class PageManager:
             else:  # Annuelle
                 steps_calc = steps
                 
-            forecast = sarimax_forecast(ts_data, steps_calc)
+            forecast = self.forecaster.sarimax_forecast(ts_data, steps_calc)  # CORRECTION: self.forecaster.
             
             # Préparation des résultats
             historical = pd.DataFrame({
@@ -2809,7 +2812,7 @@ class PageManager:
             if not forecast_data.empty:
                 fig_forecast = px.line(forecast_data, x='date', y='value', color='type',
                                      title=f"Prévision {target_var} - Global")
-                st.plotly_chart(fig_forecast, width='stretch')
+                st.plotly_chart(fig_forecast, use_container_width=True)  # CORRECTION: use_container_width=True
         else:
             unique_vals = df_kpi[forecast_dim].dropna().unique()
             for val in unique_vals:
@@ -2818,7 +2821,7 @@ class PageManager:
                 if not forecast_data.empty:
                     fig_forecast = px.line(forecast_data, x='date', y='value', color='type',
                                          title=f"Prévision {target_var} - {forecast_dim}: {val}")
-                    st.plotly_chart(fig_forecast, width='stretch')
+                    st.plotly_chart(fig_forecast, use_container_width=True)  # CORRECTION: use_container_width=True
     
     with tab3:
         st.subheader("🧪 Tests de Résistance (Stress Tests)")
@@ -2845,18 +2848,18 @@ class PageManager:
         df_stress.loc[cat_mask, "incurred_claims"] = df_stress.loc[cat_mask, "incurred_claims"] * cat_event
         
         # Comparaison baseline vs stress
-        base_kpi = aggregate_kpis(df_kpi, by=["date"])
-        stress_kpi = aggregate_kpis(df_stress, by=["date"])
+        base_kpi = self.processor.aggregate_kpis(df_kpi, by=["date"])  # CORRECTION: self.processor.
+        stress_kpi = self.processor.aggregate_kpis(df_stress, by=["date"])  # CORRECTION: self.processor.
         
         col1, col2 = st.columns(2)
         with col1:
             fig_base = px.line(base_kpi, x="date", y="combined_ratio", 
                              title="Combined Ratio - Baseline")
-            st.plotly_chart(fig_base, width='stretch')
+            st.plotly_chart(fig_base, use_container_width=True)  # CORRECTION: use_container_width=True
         with col2:
             fig_stress = px.line(stress_kpi, x="date", y="combined_ratio",
                                title="Combined Ratio - Stress Test")
-            st.plotly_chart(fig_stress, width='stretch')
+            st.plotly_chart(fig_stress, use_container_width=True)  # CORRECTION: use_container_width=True
         
         # Impact sur la solvabilité
         if {"scr", "own_funds"}.issubset(df_kpi.columns):
@@ -2872,25 +2875,25 @@ class PageManager:
         
         # Répartition par LOB
         if "lob" in df_kpi.columns:
-            lob_analysis = aggregate_kpis(df_kpi, by=["lob"])
+            lob_analysis = self.processor.aggregate_kpis(df_kpi, by=["lob"])  # CORRECTION: self.processor.
             fig_lob = px.pie(lob_analysis, values="earned_premium", names="lob",
                            title="Répartition des Primes par Ligne de Business")
-            st.plotly_chart(fig_lob, width='stretch')
+            st.plotly_chart(fig_lob, use_container_width=True)  # CORRECTION: use_container_width=True
         
         # Répartition géographique
         if "region" in df_kpi.columns:
-            region_analysis = aggregate_kpis(df_kpi, by=["region"])
+            region_analysis = self.processor.aggregate_kpis(df_kpi, by=["region"])  # CORRECTION: self.processor.
             fig_region = px.bar(region_analysis, x="region", y="earned_premium",
                               title="Primes par Région")
-            st.plotly_chart(fig_region, width='stretch')
+            st.plotly_chart(fig_region, use_container_width=True)  # CORRECTION: use_container_width=True
         
         # Analyse fréquence vs sévérité
         if {"frequency", "severity"}.issubset(df_kpi.columns):
-            freq_sev_analysis = aggregate_kpis(df_kpi, by=["lob"] if "lob" in df_kpi.columns else ["region"])
+            freq_sev_analysis = self.processor.aggregate_kpis(df_kpi, by=["lob"] if "lob" in df_kpi.columns else ["region"])  # CORRECTION: self.processor.
             fig_scatter = px.scatter(freq_sev_analysis, x="frequency", y="severity",
                                    size="earned_premium", hover_name=freq_sev_analysis.index,
                                    title="Fréquence vs Sévérité par Segment")
-            st.plotly_chart(fig_scatter, width='stretch')
+            st.plotly_chart(fig_scatter, use_container_width=True)  # CORRECTION: use_container_width=True
     
     with tab5:
         st.subheader("📤 Export des Données et Rapports")
@@ -2898,13 +2901,29 @@ class PageManager:
         # Export CSV
         st.markdown("### 📊 Données Brutes avec KPI")
         st.dataframe(df_kpi.head(100))
-        download_button(df_kpi, "donnees_reassurance_avec_kpi.csv")
+        
+        # CORRECTION: Implémentation du bouton de téléchargement
+        csv_data = df_kpi.to_csv(index=False)
+        st.download_button(
+            label="📥 Télécharger les données KPI (CSV)",
+            data=csv_data,
+            file_name="donnees_reassurance_avec_kpi.csv",
+            mime="text/csv"
+        )
         
         # Export agrégé
         st.markdown("### 📈 Données Agrégées")
-        aggregated_data = aggregate_kpis(df_kpi, by=["date"])
+        aggregated_data = self.processor.aggregate_kpis(df_kpi, by=["date"])  # CORRECTION: self.processor.
         st.dataframe(aggregated_data)
-        download_button(aggregated_data, "kpi_agreges.csv")
+        
+        # CORRECTION: Implémentation du bouton de téléchargement agrégé
+        csv_aggregated = aggregated_data.to_csv(index=False)
+        st.download_button(
+            label="📥 Télécharger les données agrégées (CSV)",
+            data=csv_aggregated,
+            file_name="kpi_agreges.csv",
+            mime="text/csv"
+        )
         
         # Rapport PDF (simplifié)
         st.markdown("### 📄 Rapport PDF")
@@ -2919,6 +2938,7 @@ class PageManager:
             - Tests de résistance
             - Recommandations stratégiques
             """)
+            
 
 # =============================================================================
 # SECTION 11: CALCULATEURS AVANCÉS
@@ -3258,6 +3278,7 @@ class ReassuranceApp:
 if __name__ == "__main__":
     app = ReassuranceApp()
     app.run()
+
 
 
 
