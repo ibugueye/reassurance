@@ -672,7 +672,7 @@ def page_principes_ludique():
         col_quiz1, col_quiz2 = st.columns(2)
         
         with col_quiz1:
-            if st.button("A - Le partage systématique vs protection seuil", width='stretch'):
+            if st.button("A - Le partage systématique vs protection seuil"):
                 st.success("🎉 Exact ! La proportionnelle partage tout, la non-proportionnelle protège au-delà d'un seuil.")
         
         with col_quiz2:
@@ -785,7 +785,7 @@ def page_types_contrats_ludique():
             ]
         }
         
-        st.dataframe(pd.DataFrame(comparatif_data), width='stretch')
+        st.dataframe(pd.DataFrame(comparatif_data), width='None')
     
     with tab2:
         st.subheader("⚖️ La Famille Proportionnelle")
@@ -1062,7 +1062,7 @@ def page_acteurs_flux_ludique():
             'Document': ['Police', 'Note de cession', 'Proposition', 'Contrat rétro', 'Bordereau']
         }
         
-        st.dataframe(pd.DataFrame(timeline_steps), width='stretch')
+        st.dataframe(pd.DataFrame(timeline_steps), width='None')
     
     with tab2:
         st.subheader("🌊 La Danse des Flux Financiers")
@@ -1553,7 +1553,7 @@ if section == "🏠 Accueil & Présentation":
         ]
     }
     
-    st.dataframe(pd.DataFrame(roadmap_data), width='stretch')
+    st.dataframe(pd.DataFrame(roadmap_data), width=None)
 
     # Appel à l'action final
     st.markdown("---")
@@ -1865,3 +1865,4 @@ if demo_mode:
     - Simulations avancées
     - Scénarios pré-configurés
     """)
+
