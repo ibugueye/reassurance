@@ -2660,9 +2660,7 @@ class PageManager:
     # =============================================================================
 # SECTION 10: ANALYSE DATA SCIENCE
 # =============================================================================
-elif section == "📊 Analyse Data Science":
-    st.markdown('<div class="section-header">📊 Analyse Data Science - KPI & Prévisions</div>', unsafe_allow_html=True)
-    
+
     # Sidebar pour les données
     with st.sidebar:
         st.subheader("📥 Chargement des Données")
@@ -3195,5 +3193,6 @@ class ReassuranceApp:
 if __name__ == "__main__":
     app = ReassuranceApp()
     app.run()
+
 
 
