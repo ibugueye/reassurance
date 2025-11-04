@@ -2923,11 +2923,13 @@ class PageManager:
 # =============================================================================
 # SECTION 11: CALCULATEURS AVANCÉS
 # =============================================================================
-elif section == "🧮 Calculateurs Avancés":
+
+def _page_calculateurs_avances(self):
+    """Page des calculateurs avancés"""
     st.markdown('<div class="section-header">🧮 Calculateurs Avancés - Outils Professionnels</div>', unsafe_allow_html=True)
-    
+
     tab1, tab2, tab3 = st.tabs(["📈 Optimisation Programme", "💰 Analyse de Rentabilité", "🛡️ Simulation SCR"])
-    
+
     with tab1:
         st.subheader("📈 Optimisateur de Programme de Réassurance")
         
@@ -2975,7 +2977,7 @@ elif section == "🧮 Calculateurs Avancés":
                     'Impact': ['↘️ Coût -15%', '↗️ Protection +10%', '🛡️ Sécurité +20%', '💰 Économie 250k€', '📈 Solvabilité +25%', '📊 ROE +2.5%']
                 }
                 
-                st.dataframe(pd.DataFrame(resultats_opti), width='stretch')
+                st.dataframe(pd.DataFrame(resultats_opti), use_container_width=True)
                 
                 # Graphique des gains
                 gains_data = {
@@ -2985,8 +2987,8 @@ elif section == "🧮 Calculateurs Avancés":
                 
                 fig_gains = px.bar(gains_data, x='Élément', y='Montant (k€)',
                                  title="Gains de l'Optimisation")
-                st.plotly_chart(fig_gains, width='stretch')
-    
+                st.plotly_chart(fig_gains, use_container_width=True)
+
     with tab2:
         st.subheader("💰 Analyse de Rentabilité par Ligne de Business")
         
@@ -3020,12 +3022,12 @@ elif section == "🧮 Calculateurs Avancés":
                 })
             
             df_roe = pd.DataFrame(data_roe)
-            st.dataframe(df_roe, width='stretch')
+            st.dataframe(df_roe, use_container_width=True)
             
             # Graphique ROE
             fig_roe = px.bar(df_roe, x='Ligne', y='ROE Technique', 
                            title="Rentabilité par Ligne de Business")
-            st.plotly_chart(fig_roe, width='stretch')
+            st.plotly_chart(fig_roe, use_container_width=True)
             
             # Analyse de la performance
             roe_moyen = df_roe['ROE Technique'].mean()
@@ -3040,6 +3042,69 @@ elif section == "🧮 Calculateurs Avancés":
             with col_perf3:
                 st.metric("📉 Ligne à améliorer", f"{moins_rentable['Ligne']} ({moins_rentable['ROE Technique']:.1f}%)")
 
+    with tab3:
+        st.subheader("🛡️ Simulation SCR (Solvency Capital Requirement)")
+        
+        st.markdown("""
+        <div class="concept-box">
+        <h4>📊 Méthodologie Standard Formula</h4>
+        <p>Calcul du capital de solvabilité selon la formule standard Solvabilité II</p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.subheader("Modules de Risque")
+            
+            # Module risque de souscription non-vie
+            st.markdown("#### 🏠 Risque Non-Vie")
+            prime_volume = st.number_input("Volume de primes (€)", value=5000000, key="prime_volume")
+            reserve_volume = st.number_input("Volume de provisions (€)", value=3000000, key="reserve_volume")
+            
+            # Module risque de marché
+            st.markdown("#### 📈 Risque de Marché")
+            equity_exposure = st.number_input("Exposition actions (€)", value=1000000, key="equity_exposure")
+            bond_exposure = st.number_input("Exposition obligations (€)", value=4000000, key="bond_exposure")
+            
+        with col2:
+            st.subheader("Paramètres de Calcul")
+            
+            # Facteurs de charge
+            st.markdown("#### ⚖️ Facteurs de Charge")
+            non_life_factor = st.slider("Facteur risque non-vie (%)", 10, 30, 18, key="non_life_factor")
+            market_equity_factor = st.slider("Facteur risque actions (%)", 20, 50, 39, key="market_equity_factor")
+            market_bond_factor = st.slider("Facteur risque obligations (%)", 5, 20, 10, key="market_bond_factor")
+            
+            # Calcul du SCR
+            if st.button("🔄 Calculer le SCR"):
+                # Calcul des sous-modules
+                scr_non_vie = (prime_volume + reserve_volume) * (non_life_factor / 100)
+                scr_marche_actions = equity_exposure * (market_equity_factor / 100)
+                scr_marche_obligations = bond_exposure * (market_bond_factor / 100)
+                
+                # Calcul du SCR agrégé (simplifié)
+                scr_total = scr_non_vie + scr_marche_actions + scr_marche_obligations
+                
+                # Affichage des résultats
+                st.subheader("📊 Résultats du Calcul SCR")
+                
+                col_res1, col_res2 = st.columns(2)
+                
+                with col_res1:
+                    st.metric("SCR Non-Vie", f"{scr_non_vie:,.0f} €")
+                    st.metric("SCR Marché Actions", f"{scr_marche_actions:,.0f} €")
+                    st.metric("SCR Marché Obligations", f"{scr_marche_obligations:,.0f} €")
+                
+                with col_res2:
+                    st.metric("📊 SCR Total", f"{scr_total:,.0f} €", delta="Capital requis")
+                    
+                    # Ratio de solvabilité (si fonds propres fournis)
+                    fonds_propres = st.number_input("Fonds propres disponibles (€)", value=3500000, key="fonds_propres")
+                    ratio_solvabilite = (fonds_propres / scr_total) * 100 if scr_total > 0 else 0
+                    
+                    st.metric("🛡️ Ratio de Solvabilité", f"{ratio_solvabilite:.1f}%", 
+                             delta="Conforme" if ratio_solvabilite >= 100 else "Non conforme")
 # =============================================================================
 # FOOTER
 # =============================================================================
@@ -3193,6 +3258,7 @@ class ReassuranceApp:
 if __name__ == "__main__":
     app = ReassuranceApp()
     app.run()
+
 
 
 
