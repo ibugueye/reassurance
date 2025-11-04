@@ -137,7 +137,7 @@ def page_introduction_ludique():
             title="Répartition des primes",
             annotations=[dict(text=f'{prime_totale:,.0f}€', x=0.5, y=0.5, font_size=20, showarrow=False)]
         )
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
         
         st.info(f"""
         **📊 Résultat de votre simulation :**
@@ -206,7 +206,7 @@ def page_introduction_ludique():
         font=dict(size=12)
     )
     
-    st.plotly_chart(sankey_fig, use_container_width=True)
+    st.plotly_chart(sankey_fig, width='stretch')
     
     # Légende interactive
     st.markdown("""
@@ -227,17 +227,17 @@ def page_introduction_ludique():
     col_cta1, col_cta2, col_cta3 = st.columns(3)
     
     with col_cta1:
-        if st.button("📚 Commencer la formation", use_container_width=True):
+        if st.button("📚 Commencer la formation", width='stretch'):
             st.session_state.current_page = "Principes Fondamentaux"
             st.rerun()
     
     with col_cta2:
-        if st.button("🎮 Voir les simulateurs", use_container_width=True):
+        if st.button("🎮 Voir les simulateurs", width='stretch'):
             st.session_state.current_page = "Calculateurs Avancés"
             st.rerun()
     
     with col_cta3:
-        if st.button("📊 Explorer les données", use_container_width=True):
+        if st.button("📊 Explorer les données", width='stretch'):
             st.session_state.current_page = "Analyse Data Science"
             st.rerun()
 
@@ -336,7 +336,7 @@ def page_principes_ludique():
         fig_timeline = px.scatter(timeline_data, x='Période', y='Impact', 
                                 size=[10, 20, 30, 40, 50], color='Impact',
                                 title="Évolution historique de la réassurance")
-        st.plotly_chart(fig_timeline, use_container_width=True)
+        st.plotly_chart(fig_timeline, width='stretch')
     
     with tab2:
         st.subheader("2️⃣ Les Deux Grandes Familles")
@@ -419,11 +419,11 @@ def page_principes_ludique():
         col_quiz1, col_quiz2 = st.columns(2)
         
         with col_quiz1:
-            if st.button("A - Le partage systématique vs protection seuil", use_container_width=True):
+            if st.button("A - Le partage systématique vs protection seuil", width='stretch'):
                 st.success("🎉 Exact ! La proportionnelle partage tout, la non-proportionnelle protège au-delà d'un seuil.")
         
         with col_quiz2:
-            if st.button("B - Le type de risques couverts", use_container_width=True):
+            if st.button("B - Le type de risques couverts", width='stretch'):
                 st.error("❌ Pas tout à fait. Les deux types peuvent couvrir les mêmes risques, mais avec des mécanismes différents.")
         
         # Récompense
@@ -441,7 +441,7 @@ def page_principes_ludique():
     col_nav1, col_nav2, col_nav3 = st.columns(3)
     
     with col_nav1:
-        if st.button("⬅️ Page précédente", use_container_width=True):
+        if st.button("⬅️ Page précédente", width='stretch'):
             st.session_state.current_page = "Introduction"
             st.rerun()
     
@@ -454,27 +454,23 @@ def page_principes_ludique():
         """, unsafe_allow_html=True)
     
     with col_nav3:
-        if st.button("Page suivante ➡️", use_container_width=True):
+        if st.button("Page suivante ➡️", width='stretch'):
             st.session_state.current_page = "Types de Contrats"
             st.rerun()
 
 def page_types_contrats_ludique():
     """Version ludique des types de contrats"""
     
-    st.markdown('<div class="main-header">📝 Types de Contrats de Réassurance</div>', unsafe_allow_html=True)
+    st.title("📝 Types de Contrats de Réassurance")
     st.markdown("### *Découvrez la boîte à outils du réassureur*")
     
     # Introduction visuelle
-    st.markdown("""
-    <div style='background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%); 
-                color: white; padding: 2rem; border-radius: 15px; margin-bottom: 2rem;'>
-        <h2>🛠️ Deux Grandes Familles, Une Multitude d'Outils</h2>
-        <p style='font-size: 1.2em;'>
+    with st.container():
+        st.markdown("## 🛠️ Deux Grandes Familles, Une Multitude d'Outils")
+        st.info("""
         Comme un artisan avec ses outils, le réassureur dispose de différentes techniques 
         adaptées à chaque situation de risque.
-        </p>
-    </div>
-    """, unsafe_allow_html=True)
+        """)
     
     # Navigation par onglets interactifs
     tab1, tab2, tab3, tab4 = st.tabs(["🎯 Vue d'ensemble", "⚖️ Proportionnelle", "🎪 Non-Proportionnelle", "🏆 Quiz Final"])
@@ -513,7 +509,7 @@ def page_types_contrats_ludique():
             title="Comparaison des caractéristiques"
         )
         
-        st.plotly_chart(fig_radar, use_container_width=True)
+        st.plotly_chart(fig_radar, width='stretch')
         
         # Tableau comparatif interactif
         st.subheader("📊 Tableau Comparatif")
@@ -536,7 +532,7 @@ def page_types_contrats_ludique():
             ]
         }
         
-        st.dataframe(pd.DataFrame(comparatif_data), use_container_width=True)
+        st.dataframe(pd.DataFrame(comparatif_data), width='stretch')
     
     with tab2:
         st.subheader("⚖️ La Famille Proportionnelle")
@@ -544,33 +540,27 @@ def page_types_contrats_ludique():
         col_desc, col_viz = st.columns([2, 1])
         
         with col_desc:
-            st.markdown("""
-            <div style='background: #e8f5e8; padding: 1.5rem; border-radius: 10px;'>
-                <h3>🧩 Le Partage Équitable</h3>
-                <p><b>Principe :</b> Partage systématique des primes et sinistres selon un pourcentage fixe.</p>
-                
-                <h4>🎯 Quand l'utiliser ?</h4>
-                <ul>
-                    <li>Portefeuille homogène</li>
-                    <li>Besoin de stabilité</li>
-                    <li>Début d'activité</li>
-                    <li>Transfert d'expertise</li>
-                </ul>
-            </div>
-            """, unsafe_allow_html=True)
+            # Section Partage Équitable
+            st.subheader("🧩 Le Partage Équitable")
+            st.write("**Principe :** Partage systématique des primes et sinistres selon un pourcentage fixe.")
+            
+            st.write("**🎯 Quand l'utiliser ?**")
+            st.markdown("- Portefeuille homogène")
+            st.markdown("- Besoin de stabilité")
+            st.markdown("- Début d'activité")
+            st.markdown("- Transfert d'expertise")
             
             # Exemple concret
-            st.markdown("""
-            <div style='background: #fff3cd; padding: 1rem; border-radius: 8px; margin-top: 1rem;'>
-                <h5>📝 Exemple Concret : Quota Share 40%</h5>
-                <ul>
-                    <li>Prime totale : <b>1 000 000 €</b></li>
-                    <li>Sinistre total : <b>600 000 €</b></li>
-                    <li>Réassureur prend : <b>400 000 €</b> de primes</li>
-                    <li>Réassureur paie : <b>240 000 €</b> de sinistres</li>
-                </ul>
-            </div>
-            """, unsafe_allow_html=True)
+            st.subheader("📝 Exemple Concret : Quota Share 40%")
+            
+            col_ex1, col_ex2 = st.columns(2)
+            with col_ex1:
+                st.metric("Prime totale", "1 000 000 €")
+                st.metric("Sinistre total", "600 000 €")
+                
+            with col_ex2:
+                st.metric("Réassureur prend", "400 000 €", "de primes")
+                st.metric("Réassureur paie", "240 000 €", "de sinistres")
         
         with col_viz:
             # Visualisation du partage
@@ -590,7 +580,7 @@ def page_types_contrats_ludique():
                 marker_colors=['#FF6B6B', '#4ECDC4']
             )])
             fig_pie.update_layout(title="Répartition des Primes")
-            st.plotly_chart(fig_pie, use_container_width=True)
+            st.plotly_chart(fig_pie, width='stretch')
             
             st.info(f"""
             **Résultat du partage :**
@@ -602,16 +592,13 @@ def page_types_contrats_ludique():
     with tab3:
         st.subheader("🎪 La Famille Non-Proportionnelle")
         
-        st.markdown("""
-        <div style='background: #e3f2fd; padding: 1.5rem; border-radius: 10px; margin-bottom: 1rem;'>
-            <h3>🛡️ La Protection Ciblée</h3>
-            <p><b>Principe :</b> Intervention du réassureur uniquement au-delà d'un certain seuil de sinistres.</p>
+        with st.container():
+            st.subheader("🛡️ La Protection Ciblée")
+            st.write("**Principe :** Intervention du réassureur uniquement au-delà d'un certain seuil de sinistres.")
             
-            <div style='text-align: center; font-size: 3em; margin: 1rem 0;'>🚧➡️🛡️</div>
+            st.markdown("<div style='text-align: center; font-size: 2em; margin: 1rem 0;'></div>", unsafe_allow_html=True)
             
-            <p><i>"Je ne protège que ce qui dépasse votre capacité d'absorption"</i></p>
-        </div>
-        """, unsafe_allow_html=True)
+            st.write("*Je ne protège que ce qui dépasse votre capacité d'absorption*")
         
         # Simulateur XL interactif
         st.subheader("🎮 Laboratoire XL (Excédent de Sinistre)")
@@ -652,7 +639,7 @@ def page_types_contrats_ludique():
                 showlegend=False
             )
             
-            st.plotly_chart(fig_waterfall, use_container_width=True)
+            st.plotly_chart(fig_waterfall, width='stretch')
             
             st.success(message)
             st.metric("Part réassureur", f"{prise_reassureur:,.0f} €")
@@ -660,13 +647,9 @@ def page_types_contrats_ludique():
     with tab4:
         st.subheader("🏆 Quiz de Validation")
         
-        st.markdown("""
-        <div style='background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
-                    color: white; padding: 2rem; border-radius: 15px; text-align: center;'>
-            <h2>🧠 Testez Votre Compréhension</h2>
-            <p>Validez vos connaissances sur les types de contrats</p>
-        </div>
-        """, unsafe_allow_html=True)
+        with st.container():
+            st.markdown("## 🧠 Testez Votre Compréhension")
+            st.info("Validez vos connaissances sur les types de contrats")
         
         # Question 1
         st.markdown("### Question 1/3")
@@ -705,7 +688,7 @@ def page_types_contrats_ludique():
             st.error("❌ Ce n'est pas la caractéristique principale.")
         
         # Résultats du quiz
-        if st.button("🎯 Voir mes résultats", use_container_width=True):
+        if st.button("🎯 Voir mes résultats", width='stretch'):
             score = 0
             if q1 == "B - Le Quota Share": score += 1
             if q2 == "B - Au-delà de la rétention de l'assureur": score += 1
@@ -713,35 +696,16 @@ def page_types_contrats_ludique():
             
             if score == 3:
                 st.balloons()
-                st.markdown("""
-                <div style='background: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%); 
-                            padding: 2rem; border-radius: 15px; text-align: center;'>
-                    <h2>🏆 Excellent !</h2>
-                    <p>Vous maîtrisez parfaitement les types de contrats !</p>
-                    <p><b>Score : 3/3</b></p>
-                </div>
-                """, unsafe_allow_html=True)
+                st.success("🏆 Excellent ! Vous maîtrisez parfaitement les types de contrats !")
+                st.metric("Score", "3/3")
             elif score >= 1:
-                st.markdown(f"""
-                <div style='background: linear-gradient(135deg, #ffd89b 0%, #19547b 100%); 
-                            color: white; padding: 2rem; border-radius: 15px; text-align: center;'>
-                    <h2>📚 Bon travail !</h2>
-                    <p>Vous avez bien compris les bases !</p>
-                    <p><b>Score : {score}/3</b></p>
-                    <p>Continuez à apprendre !</p>
-                </div>
-                """, unsafe_allow_html=True)
+                st.warning(f"📚 Bon travail ! Vous avez bien compris les bases !")
+                st.metric("Score", f"{score}/3")
+                st.write("Continuez à apprendre !")
             else:
-                st.markdown("""
-                <div style='background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%); 
-                            color: white; padding: 2rem; border-radius: 15px; text-align: center;'>
-                    <h2>📖 À revoir</h2>
-                    <p>Relisez le chapitre et réessayez !</p>
-                    <p><b>Score : 0/3</b></p>
-                    <p>La pratique rend parfait !</p>
-                </div>
-                """, unsafe_allow_html=True)
-
+                st.error("📖 À revoir - Relisez le chapitre et réessayez !")
+                st.metric("Score", "0/3")
+                st.write("La pratique rend parfait !")
 def page_acteurs_flux_ludique():
     """Version ludique des acteurs et flux du marché"""
     
@@ -844,7 +808,7 @@ def page_acteurs_flux_ludique():
             'Document': ['Police', 'Note de cession', 'Proposition', 'Contrat rétro', 'Bordereau']
         }
         
-        st.dataframe(pd.DataFrame(timeline_steps), use_container_width=True)
+        st.dataframe(pd.DataFrame(timeline_steps), width='stretch')
     
     with tab2:
         st.subheader("🌊 La Danse des Flux Financiers")
@@ -886,7 +850,7 @@ def page_acteurs_flux_ludique():
             font=dict(size=14)
         )
         
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
         
         # Légende interactive
         st.markdown("""
@@ -935,7 +899,7 @@ def page_acteurs_flux_ludique():
             'Spécialité': ['Tous risques', 'Risques spécifiques', 'Intermédiation', 'Assurance directe']
         }
         
-        st.dataframe(pd.DataFrame(acteurs_data), use_container_width=True)
+        st.dataframe(pd.DataFrame(acteurs_data), width='stretch')
         
         # Graphique de parts de marché
         marche_data = {
@@ -945,7 +909,7 @@ def page_acteurs_flux_ludique():
         
         fig_marche = px.pie(marche_data, values='Part (%)', names='Acteur',
                            title="Répartition du Marché Mondial de la Réassurance")
-        st.plotly_chart(fig_marche, use_container_width=True)
+        st.plotly_chart(fig_marche, width='stretch')
         
         # Focus sur un acteur (interactif)
         st.subheader("🔍 Zoom sur un Acteur")
@@ -1491,7 +1455,7 @@ if section == "🏠 Accueil & Présentation":
             texttemplate='%{label}<br>%{value:,.0f}€',
             textfont_color='white'
         )
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
 
     # Section Data Science
     st.markdown("---")
@@ -1591,7 +1555,7 @@ if section == "🏠 Accueil & Présentation":
             font=dict(size=12)
         )
         
-        st.plotly_chart(sankey_fig, use_container_width=True)
+        st.plotly_chart(sankey_fig, width='stretch')
 
     # Roadmap d'apprentissage
     st.markdown("---")
@@ -1614,7 +1578,7 @@ if section == "🏠 Accueil & Présentation":
         ]
     }
     
-    st.dataframe(pd.DataFrame(roadmap_data), use_container_width=True)
+    st.dataframe(pd.DataFrame(roadmap_data), width='stretch')
 
     # Appel à l'action final
     st.markdown("---")
@@ -1629,17 +1593,17 @@ if section == "🏠 Accueil & Présentation":
     col_cta1, col_cta2, col_cta3 = st.columns(3)
     
     with col_cta1:
-        if st.button("📚 Commencer les Fondamentaux", use_container_width=True, type="primary"):
+        if st.button("📚 Commencer les Fondamentaux", width='stretch', type="primary"):
             st.session_state.current_page = "Principes Fondamentaux"
             st.rerun()
     
     with col_cta2:
-        if st.button("🧮 Utiliser les Calculateurs", use_container_width=True):
+        if st.button("🧮 Utiliser les Calculateurs", width='stretch'):
             st.session_state.current_page = "Calculateurs Avancés"
             st.rerun()
     
     with col_cta3:
-        if st.button("📊 Explorer les Données", use_container_width=True):
+        if st.button("📊 Explorer les Données", width='stretch'):
             st.session_state.current_page = "Analyse Data Science"
             st.rerun()
 
@@ -1697,7 +1661,7 @@ elif section == "📚 Concepts Fondamentaux":
                 ]
             }
             
-            st.dataframe(pd.DataFrame(definitions_data), use_container_width=True)
+            st.dataframe(pd.DataFrame(definitions_data), width='stretch')
             
             st.markdown("""
             <div class="warning-box">
@@ -1745,7 +1709,7 @@ elif section == "📚 Concepts Fondamentaux":
             ]
         }
         
-        st.dataframe(pd.DataFrame(processus_data), use_container_width=True)
+        st.dataframe(pd.DataFrame(processus_data), width='stretch')
         
         # Schéma du processus
         st.markdown("### 📊 Schéma du Flux de Réassurance")
@@ -1766,7 +1730,7 @@ elif section == "📚 Concepts Fondamentaux":
         ))
         
         fig_process.update_layout(title_text="Flux des Risques et des Primes", font_size=10)
-        st.plotly_chart(fig_process, use_container_width=True)
+        st.plotly_chart(fig_process, width='stretch')
     
     with tab3:
         st.markdown("""
@@ -1831,27 +1795,24 @@ elif section == "📚 Concepts Fondamentaux":
             'Profitabilité (%)': [8.2, 6.5, 15.3, 7.8, 4.2]
         }
         
-        st.dataframe(pd.DataFrame(marche_data), use_container_width=True)
+        st.dataframe(pd.DataFrame(marche_data), width='stretch')
 
 # =============================================================================
 # SECTION 3: TRAITÉS PROPORTIONNELS
 # =============================================================================
 elif section == "📈 Traités Proportionnels":
-    st.markdown('<div class="section-header">📈 Traités Proportionnels - Théorie et Applications</div>', unsafe_allow_html=True)
+    st.markdown("### 📈 Traités Proportionnels - Théorie et Applications")
     
-    st.markdown("""
-    <div class="theory-box">
-    <h3>🧮 Principes Mathématiques des Traités Proportionnels</h3>
-    <p>Les traités proportionnels reposent sur un <b>partage systématique</b> des primes et sinistres selon un pourcentage fixe.</p>
+    st.info("""
+    **🧮 Principes Mathématiques des Traités Proportionnels**
     
-    <div class="formula-box">
-    <b>Formules fondamentales :</b><br>
-    Prime cédée = Prime directe × Taux de cession<br>
-    Sinistre cédé = Sinistre direct × Taux de cession<br>
-    Commission = Prime cédée × Taux de commission
-    </div>
-    </div>
-    """, unsafe_allow_html=True)
+    Les traités proportionnels reposent sur un **partage systématique** des primes et sinistres selon un pourcentage fixe.
+
+    **Formules fondamentales :**
+    - Prime cédée = Prime directe × Taux de cession
+    - Sinistre cédé = Sinistre direct × Taux de cession  
+    - Commission = Prime cédée × Taux de commission
+    """)
     
     tab1, tab2, tab3 = st.tabs(["📊 Quota-Share", "📈 Surplus", "🔄 Applications Pratiques"])
     
@@ -1861,29 +1822,39 @@ elif section == "📈 Traités Proportionnels":
         col1, col2 = st.columns(2)
         
         with col1:
-            st.markdown("""
-            <div class="concept-box">
-            <h4>🎯 Définition Technique</h4>
-            <p>Le <b>Quota-Share</b> est un traité par lequel la cédante cède une fraction fixe de tous les risques 
-            d'une catégorie déterminée, et le réassureur en accepte la même fraction.</p>
+            st.write("**⚖️ La Famille Proportionnelle**")
+            st.write("**🧩 Le Partage Équitable**")
+            st.write("**Principe :** Partage systématique des primes et sinistres selon un pourcentage fixe.")
             
-            <h4>📝 Caractéristiques</h4>
-            <ul>
-            <li>Taux de cession unique et constant</li>
-            <li>Application à l'ensemble du portefeuille</li>
-            <li>Partage systématique des primes et sinistres</li>
-            <li>Commission de réassurance généralement élevée</li>
-            </ul>
-            </div>
-            """, unsafe_allow_html=True)
+            st.write("**🎯 Quand l'utiliser ?**")
+            st.write("""
+            - Portefeuille homogène
+            - Besoin de stabilité
+            - Début d'activité
+            - Transfert d'expertise
+            """)
             
-            st.markdown("""
-            <div class="warning-box">
-            <h4>⚠️ Avantages et Inconvénients</h4>
-            <p><b>Avantages :</b> Simplicité, lissage efficace, réduction du besoin en capital</p>
-            <p><b>Inconvénients :</b> Cession même des bons risques, coût pour les petits sinistres</p>
-            </div>
-            """, unsafe_allow_html=True)
+            st.write("**📝 Caractéristiques**")
+            st.write("""
+            - Taux de cession unique et constant
+            - Application à l'ensemble du portefeuille
+            - Partage systématique des primes et sinistres
+            - Commission de réassurance généralement élevée
+            """)
+            
+            st.warning("""
+            **⚠️ Avantages et Inconvénients**
+            
+            **Avantages :** 
+            - Simplicité administrative
+            - Lissage efficace des résultats
+            - Réduction du besoin en capital
+            
+            **Inconvénients :**
+            - Cession même des bons risques
+            - Coût pour les petits sinistres
+            - Partage des profits avec le réassureur
+            """)
         
         with col2:
             # Calculateur Quota-Share
@@ -1916,7 +1887,7 @@ elif section == "📈 Traités Proportionnels":
             fig = px.pie(values=values, names=labels, 
                         title="Répartition de la Prime Directe",
                         color_discrete_sequence=px.colors.qualitative.Set3)
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width='stretch')
             
             # Analyse de rentabilité
             benefice_cedeant = (prime_directe - prime_cedee) - (sinistre_attendu - sinistre_cede) + commission
@@ -1928,24 +1899,24 @@ elif section == "📈 Traités Proportionnels":
     with tab2:
         st.subheader("📈 Traité de Surplus")
         
-        st.markdown("""
-        <div class="theory-box">
-        <h3>🎯 Principe du Surplus</h3>
-        <p>Le traité de <b>surplus</b> permet à la cédante de ne céder que la partie des risques qui dépasse sa rétention, 
-        avec des lignes de surplus multiples pour les très gros risques.</p>
-        
-        <div class="formula-box">
-        <b>Calcul du surplus :</b><br>
-        Ligne = Rétention × Multiple<br>
-        Cession = Min(Capital assuré - Rétention, Ligne disponible)<br>
-        Taux de cession = Cession / Capital assuré
-        </div>
-        </div>
-        """, unsafe_allow_html=True)
-        
         col1, col2 = st.columns(2)
         
         with col1:
+            st.write("**⚖️ La Famille Non-Proportionnelle**")
+            st.write("**🛡️ La Protection Ciblée**")
+            st.write("**Principe :** Intervention du réassureur uniquement au-delà d'un certain seuil de sinistres.")
+            
+            st.write("➡️ 🛡️")
+            st.write("*« Je ne protège que ce qui dépasse votre capacité d'absorption »*")
+            
+            st.write("**🎯 Quand l'utiliser ?**")
+            st.write("""
+            - Portefeuille hétérogène
+            - Risques concentrés
+            - Optimisation de capacité
+            - Protection sélective
+            """)
+            
             # Paramètres du surplus
             st.subheader("⚙️ Paramètres du Traité")
             
@@ -1995,7 +1966,7 @@ elif section == "📈 Traités Proportionnels":
                     names=['Rétention', 'Surplus cédé'],
                     title="Répartition du Risque"
                 )
-                st.plotly_chart(fig_repartition, use_container_width=True)
+                st.plotly_chart(fig_repartition, width='stretch')
     
     with tab3:
         st.subheader("🔄 Applications Pratiques et Cas d'Usage")
@@ -2003,48 +1974,43 @@ elif section == "📈 Traités Proportionnels":
         col1, col2 = st.columns(2)
         
         with col1:
-            st.markdown("""
-            <div class="case-study-box">
-            <h4>🏢 Cas d'Usage 1 : Début d'Activité</h4>
-            <p><b>Contexte</b> : Nouvel assureur avec peu de fonds propres</p>
-            <p><b>Solution</b> : Quota-share à 50% pour :</p>
-            <ul>
-            <li>Limiter l'engagement en capital</li>
-            <li>Bénéficier de l'expertise du réassureur</li>
-            <li>Construire un historique</li>
-            </ul>
-            <p><b>Résultat</b> : Croissance maîtrisée et rentabilité préservée</p>
-            </div>
-            """, unsafe_allow_html=True)
+            st.success("""
+            **🏢 Cas d'Usage 1 : Début d'Activité**
             
-            st.markdown("""
-            <div class="case-study-box">
-            <h4>🌪️ Cas d'Usage 2 : Exposition Catastrophe</h4>
-            <p><b>Contexte</b> : Assureur avec forte exposition aux catastrophes naturelles</p>
-            <p><b>Solution</b> : Programme combiné Quota-Share + Surplus</p>
-            <ul>
-            <li>Quota-share pour le portefeuille standard</li>
-            <li>Surplus pour les risques exceptionnels</li>
-            <li>Couche catastrophe spécifique</li>
-            </ul>
-            </div>
-            """, unsafe_allow_html=True)
+            **Contexte** : Nouvel assureur avec peu de fonds propres
+            
+            **Solution** : Quota-share à 50% pour :
+            - Limiter l'engagement en capital
+            - Bénéficier de l'expertise du réassureur  
+            - Construire un historique
+            
+            **Résultat** : Croissance maîtrisée et rentabilité préservée
+            """)
+            
+            st.success("""
+            **🌪️ Cas d'Usage 2 : Exposition Catastrophe**
+            
+            **Contexte** : Assureur avec forte exposition aux catastrophes naturelles
+            
+            **Solution** : Programme combiné Quota-Share + Surplus
+            - Quota-share pour le portefeuille standard
+            - Surplus pour les risques exceptionnels  
+            - Couche catastrophe spécifique
+            
+            **Résultat** : Protection complète à coût maîtrisé
+            """)
         
         with col2:
-            st.markdown("""
-            <div class="theory-box">
-            <h4>📊 Optimisation du Programme</h4>
-            <p>Critères pour choisir entre Quota-Share et Surplus :</p>
+            st.write("**📊 Optimisation du Programme**")
+            st.write("Critères pour choisir entre Quota-Share et Surplus :")
             
-            <div class="formula-box">
-            <b>Matrice de décision :</b><br>
-            Homogénéité du portefeuille → Quota-Share<br>
-            Hétérogénéité des risques → Surplus<br>
-            Besoin de liquidité → Quota-Share<br>
-            Optimisation capital → Surplus
-            </div>
-            </div>
-            """, unsafe_allow_html=True)
+            st.code("""
+            Matrice de décision :
+            • Homogénéité du portefeuille → Quota-Share
+            • Hétérogénéité des risques → Surplus  
+            • Besoin de liquidité → Quota-Share
+            • Optimisation capital → Surplus
+            """)
             
             # Calculateur d'optimisation
             st.subheader("🎯 Calculateur d'Optimisation")
@@ -2160,7 +2126,7 @@ elif section == "⚡ Traités Non-Proportionnels":
                 y=[primes_portefeuille, -sinistres_reels, priorite_absolue, prise_reassureur, -sinistre_reste_cedeant]
             ))
             fig.update_layout(title="Analyse Stop Loss - Répartition des Flux")
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width=True)
             
             # Analyse de la protection
             protection_obtenue = (prise_reassureur / sinistres_reels) * 100 if sinistres_reels > 0 else 0
@@ -2240,7 +2206,7 @@ elif section == "⚡ Traités Non-Proportionnels":
             sinistre_restant -= prise_couche
         
         df_resultats = pd.DataFrame(resultats_couches)
-        st.dataframe(df_resultats, use_container_width=True)
+        st.dataframe(df_resultats, width=True)
         
         col_cout1, col_cout2 = st.columns(2)
         with col_cout1:
@@ -2380,7 +2346,7 @@ elif section == "💰 Tarification Technique":
             fig_dist = px.histogram(couts_sinistres, nbins=50, 
                                   title="Distribution des Coûts de Sinistres",
                                   labels={'value': 'Coût du sinistre (€)', 'count': 'Fréquence'})
-            st.plotly_chart(fig_dist, use_container_width=True)
+            st.plotly_chart(fig_dist, width=True)
             
             # Statistiques descriptives
             stats_data = {
@@ -2459,7 +2425,7 @@ elif section == "💰 Tarification Technique":
             
             fig_compo = px.pie(composition, values='Valeur (€)', names='Élément', 
                              title="Composition de la Prime Commerciale")
-            st.plotly_chart(fig_compo, use_container_width=True)
+            st.plotly_chart(fig_compo, width=True)
             
             # Analyse de rentabilité
             ratio_combine_attendu = (prime_risque / prime_chargement_frais) * 100
@@ -2547,7 +2513,7 @@ elif section == "📊 Comptabilité Technique":
                 'Développement final': [1.1, 1.1, None, None, None]
             }
             
-            st.dataframe(pd.DataFrame(developpement_data), use_container_width=True)
+            st.dataframe(pd.DataFrame(developpement_data), width='stretch')
             
             st.markdown("""
             <div class="warning-box">
@@ -2594,12 +2560,12 @@ elif section == "📊 Comptabilité Technique":
         }
         
         df_ratios = pd.DataFrame(ratios_data)
-        st.dataframe(df_ratios, use_container_width=True)
+        st.dataframe(df_ratios, width='stretch')
         
         # Graphique des ratios
         fig_ratios = px.bar(df_ratios, x='Ratio', y=['Valeur', 'Cible'], 
                           barmode='group', title="Comparaison Ratios Réels vs Cibles")
-        st.plotly_chart(fig_ratios, use_container_width=True)
+        st.plotly_chart(fig_ratios, width='stretch')
 
 # =============================================================================
 # SECTION 7: GESTION DES CATASTROPHES
@@ -2678,7 +2644,7 @@ elif section == "🌪️ Gestion des Catastrophes":
             fig_pml = px.line(x=periods, y=pml_values, 
                             labels={'x': 'Période de retour (ans)', 'y': 'PML (€)'},
                             title="Courbe Probable Maximum Loss")
-            st.plotly_chart(fig_pml, use_container_width=True)
+            st.plotly_chart(fig_pml, width='stretch')
     
     with tab2:
         st.subheader("📊 Couverture Catastrophe")
@@ -2711,7 +2677,7 @@ elif section == "🌪️ Gestion des Catastrophes":
                 y=[dommage_estime, -priorite_cat, -prise_reassureur_cat]
             ))
             fig_cat.update_layout(title="Répartition du Sinistre Catastrophe")
-            st.plotly_chart(fig_cat, use_container_width=True)
+            st.plotly_chart(fig_cat, width='stretch')
             
             # Analyse coût-bénéfice
             esperance_sinistre = dommage_estime * (proba_annee[type_catastrophe] / 100)
@@ -3331,7 +3297,7 @@ elif section == "📋 Études de Cas Concrets":
                 go.Bar(name='PML Maximal (%)', x=regions, y=pml_regions)
             ])
             fig_concentration.update_layout(title="Concentration Géographique et PML")
-            st.plotly_chart(fig_concentration, use_container_width=True)
+            st.plotly_chart(fig_concentration, width='stretch')
             
             # Indice de concentration Herfindahl
             herfindahl = sum([(exp/100)**2 for exp in expositions]) * 10000
@@ -3503,7 +3469,7 @@ elif section == "📊 Analyse Data Science":
             fig = px.line(grouped_data, x="date", y=kpi_column, color=selected_dims[0], 
                          title=f"Évolution du {selected_kpi} par {selected_dims[0]}",
                          markers=True)
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width='stretch')
             
             # Heatmap des corrélations
             st.subheader("📊 Matrice de Corrélation")
@@ -3511,7 +3477,7 @@ elif section == "📊 Analyse Data Science":
             corr_matrix = grouped_data[numeric_cols].corr()
             fig_corr = px.imshow(corr_matrix, text_auto=True, aspect="auto",
                                title="Corrélations entre Variables Numériques")
-            st.plotly_chart(fig_corr, use_container_width=True)
+            st.plotly_chart(fig_corr, width='stretch')
     
     with tab2:
         st.subheader("🔮 Prévisions SARIMAX")
@@ -3560,7 +3526,7 @@ elif section == "📊 Analyse Data Science":
             if not forecast_data.empty:
                 fig_forecast = px.line(forecast_data, x='date', y='value', color='type',
                                      title=f"Prévision {target_var} - Global")
-                st.plotly_chart(fig_forecast, use_container_width=True)
+                st.plotly_chart(fig_forecast, width='stretch')
         else:
             unique_vals = df_kpi[forecast_dim].dropna().unique()
             for val in unique_vals:
@@ -3569,7 +3535,7 @@ elif section == "📊 Analyse Data Science":
                 if not forecast_data.empty:
                     fig_forecast = px.line(forecast_data, x='date', y='value', color='type',
                                          title=f"Prévision {target_var} - {forecast_dim}: {val}")
-                    st.plotly_chart(fig_forecast, use_container_width=True)
+                    st.plotly_chart(fig_forecast, width='stretch')
     
     with tab3:
         st.subheader("🧪 Tests de Résistance (Stress Tests)")
@@ -3603,11 +3569,11 @@ elif section == "📊 Analyse Data Science":
         with col1:
             fig_base = px.line(base_kpi, x="date", y="combined_ratio", 
                              title="Combined Ratio - Baseline")
-            st.plotly_chart(fig_base, use_container_width=True)
+            st.plotly_chart(fig_base, width='stretch')
         with col2:
             fig_stress = px.line(stress_kpi, x="date", y="combined_ratio",
                                title="Combined Ratio - Stress Test")
-            st.plotly_chart(fig_stress, use_container_width=True)
+            st.plotly_chart(fig_stress, width='stretch')
         
         # Impact sur la solvabilité
         if {"scr", "own_funds"}.issubset(df_kpi.columns):
@@ -3626,14 +3592,14 @@ elif section == "📊 Analyse Data Science":
             lob_analysis = aggregate_kpis(df_kpi, by=["lob"])
             fig_lob = px.pie(lob_analysis, values="earned_premium", names="lob",
                            title="Répartition des Primes par Ligne de Business")
-            st.plotly_chart(fig_lob, use_container_width=True)
+            st.plotly_chart(fig_lob, width='stretch')
         
         # Répartition géographique
         if "region" in df_kpi.columns:
             region_analysis = aggregate_kpis(df_kpi, by=["region"])
             fig_region = px.bar(region_analysis, x="region", y="earned_premium",
                               title="Primes par Région")
-            st.plotly_chart(fig_region, use_container_width=True)
+            st.plotly_chart(fig_region, width='stretch')
         
         # Analyse fréquence vs sévérité
         if {"frequency", "severity"}.issubset(df_kpi.columns):
@@ -3641,7 +3607,7 @@ elif section == "📊 Analyse Data Science":
             fig_scatter = px.scatter(freq_sev_analysis, x="frequency", y="severity",
                                    size="earned_premium", hover_name=freq_sev_analysis.index,
                                    title="Fréquence vs Sévérité par Segment")
-            st.plotly_chart(fig_scatter, use_container_width=True)
+            st.plotly_chart(fig_scatter, width='stretch')
     
     with tab5:
         st.subheader("📤 Export des Données et Rapports")
@@ -3726,7 +3692,7 @@ elif section == "🧮 Calculateurs Avancés":
                     'Impact': ['↘️ Coût -15%', '↗️ Protection +10%', '🛡️ Sécurité +20%', '💰 Économie 250k€', '📈 Solvabilité +25%', '📊 ROE +2.5%']
                 }
                 
-                st.dataframe(pd.DataFrame(resultats_opti), use_container_width=True)
+                st.dataframe(pd.DataFrame(resultats_opti), width='stretch')
                 
                 # Graphique des gains
                 gains_data = {
@@ -3736,7 +3702,7 @@ elif section == "🧮 Calculateurs Avancés":
                 
                 fig_gains = px.bar(gains_data, x='Élément', y='Montant (k€)',
                                  title="Gains de l'Optimisation")
-                st.plotly_chart(fig_gains, use_container_width=True)
+                st.plotly_chart(fig_gains, width='stretch')
     
     with tab2:
         st.subheader("💰 Analyse de Rentabilité par Ligne de Business")
@@ -3771,12 +3737,12 @@ elif section == "🧮 Calculateurs Avancés":
                 })
             
             df_roe = pd.DataFrame(data_roe)
-            st.dataframe(df_roe, use_container_width=True)
+            st.dataframe(df_roe, width='stretch')
             
             # Graphique ROE
             fig_roe = px.bar(df_roe, x='Ligne', y='ROE Technique', 
                            title="Rentabilité par Ligne de Business")
-            st.plotly_chart(fig_roe, use_container_width=True)
+            st.plotly_chart(fig_roe, width='stretch')
             
             # Analyse de la performance
             roe_moyen = df_roe['ROE Technique'].mean()
